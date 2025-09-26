@@ -1,58 +1,95 @@
 import streamlit as st
 from blockchain import Blockchain
+import pandas as pd
 
 # Initialize blockchain
 if "blockchain" not in st.session_state:
     st.session_state.blockchain = Blockchain()
 
-st.title("📒 Blockchain-based Digital Diary ")
+st.set_page_config(page_title="📒 Digital Diary", layout="wide")
+st.title("📒 Blockchain-based Digital Diary (Advanced Multi-User)")
 
-# 🔍 Search Section
-st.sidebar.header("🔍 Search Diary")
-search_id = st.sidebar.text_input("Search by Diary ID (index)")
-search_user = st.sidebar.text_input("Search by User Name")
+# Metrics
+total_entries = len(st.session_state.blockchain.chain) - 1
+users = list(set([b.user for b in st.session_state.blockchain.chain if b.index != 0]))
+total_users = len(users)
+st.metric("Total Entries", total_entries)
+st.metric("Total Users", total_users)
 
-# Separate section for User Name
-st.subheader("👤 User Information")
-user = st.text_input("Enter Your Name")
+# Top search bar
+st.subheader("🔍 Search Diary")
+col1, col2 = st.columns(2)
+with col1:
+    search_id = st.text_input("Search by Diary ID")
+with col2:
+    search_user = st.text_input("Search by User Name")
 
-# Section for Diary Entry
-st.subheader("✍️ Write Your Diary Entry")
-entry = st.text_area("Diary Entry:")
+# Add new entry
+st.subheader("✍️ Add New Entry")
+user = st.text_input("👤 Enter Your Name", key="name_input")
+title = st.text_input("📌 Entry Title", key="title_input")
+entry = st.text_area("📝 Diary Entry", key="entry_input")
 
 if st.button("Add Entry"):
-    if user.strip() and entry.strip():
-        st.session_state.blockchain.add_block(user, entry)
+    if user.strip() and entry.strip() and title.strip():
+        st.session_state.blockchain.add_block(user, title, entry)
         st.success(f"Entry added successfully for {user}!")
     else:
-        st.warning("Please enter both name and entry text.")
+        st.warning("Please enter Name, Title, and Entry.")
 
-# Display diary timeline
+# Verify Blockchain
+if st.button("🔒 Verify Blockchain Integrity"):
+    if st.session_state.blockchain.verify_chain():
+        st.success("✅ Blockchain is valid.")
+    else:
+        st.error("❌ Blockchain integrity compromised!")
+
+# Timeline display
 st.subheader("📜 Diary Timeline")
+found = False
+colors = ["#FFD700", "#90EE90", "#ADD8E6", "#FFA07A", "#DDA0DD"]
+color_map = {user: colors[i % len(colors)] for i, user in enumerate(users)}
 
-found = False  # flag to check if any block is displayed
-for block in st.session_state.blockchain.chain:
-    # Apply search filters
-    if search_id and str(block.index) != search_id:
+for block in reversed(st.session_state.blockchain.chain):
+    if block.index == 0:
+        continue  # skip Genesis Block
+    if search_id and block.diary_id != search_id:
         continue
     if search_user and block.user.lower() != search_user.lower():
         continue
 
-    # Skip showing Genesis Block
-    if block.index == 0 and block.data == "Genesis Block":
-        continue
-
-    st.markdown(f"""
-    **Diary ID:** {block.index}  
-    **User:** {block.user}  
-    **Timestamp:** {block.timestamp}  
-    **Entry:** {block.data}  
-    **Hash:** `{block.hash}`  
-    **Previous Hash:** `{block.previous_hash}`  
-    """)
-    st.write("---")
+    color = color_map.get(block.user, "#FFFFFF")
+    with st.expander(f"{block.title} - {block.user} ({block.diary_id})", expanded=False):
+        st.markdown(f"""
+        <div style="background-color:{color}; padding:10px; border-radius:5px">
+        **Diary ID:** {block.diary_id}  \n
+        **User:** {block.user}  \n
+        **Timestamp:** {block.timestamp}  \n
+        **Entry:** {block.data}  \n
+        **Hash:** `{block.hash}`  \n
+        **Previous Hash:** `{block.previous_hash}`
+        </div>
+        """, unsafe_allow_html=True)
     found = True
 
-# Show error if no entries are found
 if not found:
     st.error("❌ No diary entries found.")
+
+# Export all entries as CSV
+if st.button("📤 Export All Entries as CSV"):
+    data = []
+    for block in st.session_state.blockchain.chain:
+        if block.index == 0:
+            continue
+        data.append({
+            "Diary ID": block.diary_id,
+            "User": block.user,
+            "Title": block.title,
+            "Entry": block.data,
+            "Timestamp": block.timestamp,
+            "Hash": block.hash,
+            "Previous Hash": block.previous_hash
+        })
+    df = pd.DataFrame(data)
+    df.to_csv("diary_entries.csv", index=False)
+    st.success("✅ CSV exported successfully!")
