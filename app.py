@@ -1,6 +1,5 @@
 import streamlit as st
 from blockchain import Blockchain
-import pandas as pd
 
 # Initialize blockchain
 if "blockchain" not in st.session_state:
@@ -74,22 +73,3 @@ for block in reversed(st.session_state.blockchain.chain):
 
 if not found:
     st.error("❌ No diary entries found.")
-
-# Export all entries as CSV
-if st.button("📤 Export All Entries as CSV"):
-    data = []
-    for block in st.session_state.blockchain.chain:
-        if block.index == 0:
-            continue
-        data.append({
-            "Diary ID": block.diary_id,
-            "User": block.user,
-            "Title": block.title,
-            "Entry": block.data,
-            "Timestamp": block.timestamp,
-            "Hash": block.hash,
-            "Previous Hash": block.previous_hash
-        })
-    df = pd.DataFrame(data)
-    df.to_csv("diary_entries.csv", index=False)
-    st.success("✅ CSV exported successfully!")
