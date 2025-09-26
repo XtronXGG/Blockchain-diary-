@@ -6,7 +6,7 @@ if "blockchain" not in st.session_state:
     st.session_state.blockchain = Blockchain()
 
 st.set_page_config(page_title="📒 Digital Diary", layout="wide")
-st.title("📒 Blockchain-based Digital Diary (Advanced Multi-User)")
+st.title("📒 Blockchain-based Digital Diary ")
 
 # Metrics
 total_entries = len(st.session_state.blockchain.chain) - 1
