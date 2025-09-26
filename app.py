@@ -5,7 +5,7 @@ from blockchain import Blockchain
 if "blockchain" not in st.session_state:
     st.session_state.blockchain = Blockchain()
 
-st.title("📒 Blockchain-based Digital Diary")
+st.title("📒 Blockchain-based Digital Diary (Multi-User)")
 
 # 🔍 Search Section
 st.sidebar.header("🔍 Search Diary")
@@ -29,11 +29,17 @@ if st.button("Add Entry"):
 
 # Display diary timeline
 st.subheader("📜 Diary Timeline")
+
+found = False  # flag to check if any block is displayed
 for block in st.session_state.blockchain.chain:
     # Apply search filters
     if search_id and str(block.index) != search_id:
         continue
     if search_user and block.user.lower() != search_user.lower():
+        continue
+
+    # Skip showing Genesis Block
+    if block.index == 0 and block.data == "Genesis Block":
         continue
 
     st.markdown(f"""
@@ -45,3 +51,8 @@ for block in st.session_state.blockchain.chain:
     **Previous Hash:** `{block.previous_hash}`  
     """)
     st.write("---")
+    found = True
+
+# Show error if no entries are found
+if not found:
+    st.error("❌ No diary entries found.")
