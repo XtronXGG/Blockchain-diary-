@@ -46,8 +46,6 @@ if st.button("🔒 Verify Blockchain Integrity"):
 # Timeline display
 st.subheader("📜 Diary Timeline")
 found = False
-colors = ["#FFD700", "#90EE90", "#ADD8E6", "#FFA07A", "#DDA0DD"]
-color_map = {user: colors[i % len(colors)] for i, user in enumerate(users)}
 
 for block in reversed(st.session_state.blockchain.chain):
     if block.index == 0:
@@ -57,18 +55,15 @@ for block in reversed(st.session_state.blockchain.chain):
     if search_user and block.user.lower() != search_user.lower():
         continue
 
-    color = color_map.get(block.user, "#FFFFFF")
     with st.expander(f"{block.title} - {block.user} ({block.diary_id})", expanded=False):
         st.markdown(f"""
-        <div style="background-color:{color}; padding:10px; border-radius:5px">
         **Diary ID:** {block.diary_id}  \n
         **User:** {block.user}  \n
         **Timestamp:** {block.timestamp}  \n
         **Entry:** {block.data}  \n
         **Hash:** `{block.hash}`  \n
         **Previous Hash:** `{block.previous_hash}`
-        </div>
-        """, unsafe_allow_html=True)
+        """)
     found = True
 
 if not found:
