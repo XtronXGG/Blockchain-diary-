@@ -5,7 +5,7 @@ from blockchain import Blockchain
 if "blockchain" not in st.session_state:
     st.session_state.blockchain = Blockchain()
 
-st.title("📒 Blockchain-based Digital Diary (Multi-User)")
+st.title("📒 Blockchain-based Digital Diary")
 
 # 🔍 Search Section
 st.sidebar.header("🔍 Search Diary")
